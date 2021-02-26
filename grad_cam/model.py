@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.init as init
 
 class CNN(nn.Module):
     def __init__(self, num_feature=32):
@@ -34,21 +35,20 @@ class CNN(nn.Module):
             if isinstance(m, nn.Conv2d):
                 
                 # Kaming Initialization
-                init.kaiming_normal(m.weight.data)
-                m.bias.data.fill_(0)
+                init.kaiming_normal_(m.weight.data)
+                m.bias.data.fill_(0.)
                 
             elif isinstance(m, nn.Linear):
 
                 # Kaming Initialization
-                init.kaiming_normal(m.weight.data)
-                m.bias.data.fill_(0)
+                init.kaiming_normal_(m.weight.data)
+                m.bias.data.fill_(0.)
         
         
     def forward(self,x):
+
         out = self.layer(x)
         out = out.view(x.size()[0], -1)
         out = self.fc_layer(out)
 
         return out
-
-model = nn.DataParallel(CNN().cuda())
