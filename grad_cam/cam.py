@@ -5,6 +5,7 @@ import torch.nn as nn
 from torch.autograd import Function
 
 class CAM():
+
     def __init__(self,model):
         self.gradient = []
         self.model = model
@@ -66,6 +67,7 @@ class CAM():
 
 
 class GuidedBackpropRelu(Function):
+
     @staticmethod
     def forward(ctx,input):
         ctx.save_for_backward(input)
@@ -73,38 +75,42 @@ class GuidedBackpropRelu(Function):
     
     @staticmethod
     def backward(ctx,grad_output):
-        input = ctx.saved_tensors[0]
-        grad_input = grad_output.clone()
-        grad_input[grad_input<0] = 0
-        grad_input[input<0]=0
+        input = ctx.saved_tensors[0] # forwarding 할 때의 입력값
+        grad_input = grad_output.clone() # backward 할 때의 입력된 미분 값
+        grad_input[grad_input<0] = 0 # 미분 양인 것만
+        grad_input[input<0]=0 # 입력도 양인 것만
         return grad_input
      
 
 class GuidedReluModel(nn.Module):
+
     def __init__(self,model,to_be_replaced,replace_to):
         super(GuidedReluModel,self).__init__()
         self.model = model
         self.to_be_replaced = to_be_replaced
         self.replace_to = replace_to
-        self.layers=[]
-        self.output=[]
+        self.layers = []
+        self.output = []
         
         for m in self.model.modules():
             if isinstance(m,self.to_be_replaced):
                 self.layers.append(self.replace_to )
                 #self.layers.append(m)
+
             elif isinstance(m,nn.Conv2d):
                 self.layers.append(m)
+
             elif isinstance(m,nn.BatchNorm2d):
                 self.layers.append(m)
+
             elif isinstance(m,nn.Linear):
                 self.layers.append(m)
+
             elif isinstance(m,nn.AvgPool2d):
                 self.layers.append(m)
                 
         for i in self.layers:
             print(i)
-        
         
     def reset_output(self):
         self.output = []
